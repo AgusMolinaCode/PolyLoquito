@@ -267,6 +267,14 @@ def get_multi_asset_signals(assets: List[str]) -> Dict[str, Optional[Dict]]:
 
 # ─── POLYMARKET: MERCADOS ─────────────────────────────────────────────────────
 
+ASSET_NAMES = {
+    "BTC": "BITCOIN",
+    "ETH": "ETHEREUM",
+    "SOL": "SOLANA",
+    "XRP": "XRP",
+    "DOGE": "DOGECOIN",
+}
+
 
 def get_fast_markets(asset: str = "BTC") -> List[Dict]:
     """
@@ -278,7 +286,7 @@ def get_fast_markets(asset: str = "BTC") -> List[Dict]:
     try:
         r = requests.get(
             f"{POLYMARKET_GAMMA}/markets",
-            params={"active": "true", "closed": "false", "limit": 100},
+            params={"active": "true", "closed": "false", "limit": 300},
             timeout=10,
         )
         r.raise_for_status()
@@ -288,11 +296,15 @@ def get_fast_markets(asset: str = "BTC") -> List[Dict]:
         now = datetime.now(timezone.utc).timestamp()
         fast = []
 
+        asset_name = ASSET_NAMES.get(asset, asset).upper()
+
         for m in markets:
             q = m.get("question", "")
 
             # Filtrar por asset y tipo de mercado
-            if asset not in q.upper() or "UP OR DOWN" not in q.upper():
+            if (
+                asset_name not in q.upper() and asset not in q.upper()
+            ) or "UP OR DOWN" not in q.upper():
                 continue
 
             # Detectar ventana temporal (5m o 15m)
